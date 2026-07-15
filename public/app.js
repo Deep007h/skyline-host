@@ -3,6 +3,7 @@ let API_BASE = localStorage.getItem('skyline_backend_url') || '';
 
 let activeLogsInterval = null;
 let activeLogsSiteId = null;
+let lastSelectedFolderUri = null;
 
 // Initialize Lucide icons on start
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,12 +87,31 @@ async function fetchSystemInfo() {
           binaryStatus.previousElementSibling.className = 'status-dot-green';
         } else {
           binaryStatus.textContent = 'Downloading';
-          binaryStatus.previousElementSibling.className = 'status-dot-green'; // keep green or update styles
+          binaryStatus.previousElementSibling.className = 'status-dot-green';
         }
       }
     }
   } catch (err) {
     console.error('Failed to fetch system info:', err);
+    if (typeof Capacitor !== 'undefined') {
+      const verSidebar = document.getElementById('sys-version-sidebar');
+      if (verSidebar) verSidebar.textContent = 'Android OS';
+      
+      const osPill = document.getElementById('sys-os');
+      if (osPill) osPill.textContent = 'Android WebView';
+      
+      const nodePill = document.getElementById('sys-node');
+      if (nodePill) nodePill.textContent = 'Capacitor 5';
+      
+      const memPill = document.getElementById('sys-memory');
+      if (memPill) memPill.textContent = 'Shared Heap';
+      
+      const binaryStatus = document.getElementById('sys-binary');
+      if (binaryStatus) {
+        binaryStatus.textContent = 'Local Server';
+        binaryStatus.previousElementSibling.className = 'status-dot-green';
+      }
+    }
   }
 }
 
@@ -102,6 +122,15 @@ function capitalize(s) {
 
 // Fetch all configured sites
 async function fetchSites() {
+  const isLocalApk = !API_BASE && typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker;
+  
+  if (isLocalApk) {
+    const localSitesJson = localStorage.getItem('local_sites');
+    const sites = localSitesJson ? JSON.parse(localSitesJson) : [];
+    renderSitesList(sites);
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/sites`);
     if (res.ok) {
@@ -244,6 +273,7 @@ function autoDetectProjectPath() {
   if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker) {
     Capacitor.Plugins.FolderPicker.selectFolder()
       .then(result => {
+        lastSelectedFolderUri = result.path; // Store raw URI
         let uriPath = result.path;
         try {
           uriPath = decodeURIComponent(uriPath);
@@ -288,6 +318,47 @@ async function handleHostSubmit(e) {
   const originalHtml = submitBtn.innerHTML;
   submitBtn.innerHTML = `<span>Connecting...</span>`;
 
+  const isLocalApk = !API_BASE && typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker;
+
+  if (isLocalApk) {
+    if (!lastSelectedFolderUri) {
+      alert('Please select a directory first using the folder icon next to the local path.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHtml;
+      return;
+    }
+    
+    try {
+      // Start native local static file web server!
+      const res = await Capacitor.Plugins.FolderPicker.startLocalServer({
+        uri: lastSelectedFolderUri,
+        port: 9090
+      });
+      
+      const localSite = {
+        id: 'local-site-9090',
+        name: name,
+        path: sitePath,
+        port: 9090,
+        tunnelUrl: res.url,
+        status: 'running',
+        rawUri: lastSelectedFolderUri
+      };
+      
+      localStorage.setItem('local_sites', JSON.stringify([localSite]));
+      
+      closeNewSiteModal();
+      await fetchSites();
+    } catch (err) {
+      alert('Local webserver failed to start: ' + err);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHtml;
+      lucide.createIcons();
+    }
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/sites`, {
       method: 'POST',
@@ -323,6 +394,34 @@ async function handleHostSubmit(e) {
 
 // Toggle start/stop state
 async function toggleSite(id, action) {
+  const isLocalApk = !API_BASE && typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker;
+  
+  if (isLocalApk) {
+    const localSitesJson = localStorage.getItem('local_sites');
+    if (!localSitesJson) return;
+    const sites = JSON.parse(localSitesJson);
+    const site = sites.find(s => s.id === id);
+    if (!site) return;
+    
+    try {
+      if (action === 'stop') {
+        await Capacitor.Plugins.FolderPicker.stopLocalServer();
+        site.status = 'stopped';
+      } else {
+        await Capacitor.Plugins.FolderPicker.startLocalServer({
+          uri: site.rawUri,
+          port: 9090
+        });
+        site.status = 'running';
+      }
+      localStorage.setItem('local_sites', JSON.stringify(sites));
+      await fetchSites();
+    } catch (err) {
+      alert('Failed to toggle local server: ' + err);
+    }
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/sites/${id}/${action}`, {
       method: 'POST'
@@ -349,6 +448,20 @@ async function deleteSite(id) {
   if (!confirm('Are you sure you want to stop and delete this site host configuration?')) {
     return;
   }
+  
+  const isLocalApk = !API_BASE && typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker;
+  
+  if (isLocalApk) {
+    try {
+      await Capacitor.Plugins.FolderPicker.stopLocalServer();
+      localStorage.removeItem('local_sites');
+      await fetchSites();
+    } catch (err) {
+      alert('Failed to stop local server: ' + err);
+    }
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/sites/${id}`, {
       method: 'DELETE'
@@ -382,6 +495,20 @@ function closeLogsModal() {
 
 async function fetchLogs() {
   if (!activeLogsSiteId) return;
+  
+  const isLocalApk = !API_BASE && typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker;
+  if (isLocalApk) {
+    const viewport = document.getElementById('logs-viewport');
+    if (viewport) {
+      viewport.innerHTML = `
+        <div class="log-line system">[System] Static server listening on port 9090...</div>
+        <div class="log-line server">[Server] Client connection requests piped directly to android DocumentFile API.</div>
+        <div class="log-line system">[System] Access dashboard locally at http://localhost:9090</div>
+      `;
+    }
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/logs/${activeLogsSiteId}`);
     if (res.ok) {
