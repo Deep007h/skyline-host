@@ -1,11 +1,18 @@
-// API Endpoints Base
-const API_BASE = '';
+// Dynamic API Endpoint Base for Desktop/Mobile APK
+let API_BASE = localStorage.getItem('skyline_backend_url') || '';
 
 let activeLogsInterval = null;
 let activeLogsSiteId = null;
 
 // Initialize Lucide icons on start
 document.addEventListener('DOMContentLoaded', () => {
+  // Pre-fill connection input if present
+  const ipInput = document.getElementById('server-ip-input');
+  if (ipInput) {
+    ipInput.value = API_BASE;
+  }
+  updateConnectionStatusText();
+
   fetchSystemInfo();
   fetchSites();
   lucide.createIcons();
@@ -16,6 +23,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // Setup auto-detect folder button
   document.getElementById('btn-detect-path').addEventListener('click', autoDetectProjectPath);
 });
+
+function saveConnectionUrl() {
+  const ipInput = document.getElementById('server-ip-input');
+  if (!ipInput) return;
+  
+  let val = ipInput.value.trim();
+  if (val) {
+    if (!val.startsWith('http://') && !val.startsWith('https://')) {
+      val = 'http://' + val;
+    }
+    localStorage.setItem('skyline_backend_url', val);
+    API_BASE = val;
+  } else {
+    localStorage.removeItem('skyline_backend_url');
+    API_BASE = '';
+  }
+  
+  updateConnectionStatusText();
+  fetchSystemInfo();
+  fetchSites();
+}
+
+function updateConnectionStatusText() {
+  const statusEl = document.getElementById('connection-status');
+  if (!statusEl) return;
+  
+  if (API_BASE) {
+    statusEl.textContent = `connected to ${API_BASE}`;
+    statusEl.style.color = 'var(--success-green)';
+  } else {
+    statusEl.textContent = 'default relative host';
+    statusEl.style.color = 'var(--text-muted)';
+  }
+}
 
 // Fetch system info from API
 async function fetchSystemInfo() {

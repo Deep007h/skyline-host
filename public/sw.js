@@ -1,4 +1,4 @@
-const CACHE_NAME = 'skyline-host-v6';
+const CACHE_NAME = 'skyline-host-v7';
 const ASSETS = [
   '/',
   '/index.html',

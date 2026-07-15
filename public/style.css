@@ -135,6 +135,71 @@ body {
   color: var(--text-active);
 }
 
+/* Sidebar connection panel styling */
+.sidebar-connection-panel {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  background-color: rgba(92, 78, 60, 0.03);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.sidebar-connection-panel label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.connection-input-group {
+  display: flex;
+  gap: 6px;
+}
+
+.connection-input-group input {
+  flex: 1;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.connection-input-group input:focus {
+  outline: none;
+  border-color: var(--border-hover);
+}
+
+.btn-connect {
+  background-color: var(--text-primary);
+  color: var(--bg-sidebar);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-connect:hover {
+  background-color: var(--text-active);
+}
+
+.connection-status {
+  font-size: 9px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 /* Bottom Server Status Card with overlap illustration */
 .server-status-card {
   background-color: var(--bg-sidebar);
