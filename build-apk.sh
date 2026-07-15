@@ -2,7 +2,7 @@
 set -e
 
 echo "[1/7] Initializing project paths..."
-PROJECT_DIR="/home/deep/Music/newregal-main/NEWREGAL/skyline-host"
+PROJECT_DIR="/home/deep/Desktop/skyline-host"
 SDK_DIR="$PROJECT_DIR/android-sdk"
 export ANDROID_HOME="$SDK_DIR"
 export PATH="$PATH:$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools"
@@ -33,7 +33,7 @@ echo "[4/7] Accepting Android licenses..."
 yes | "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --licenses --sdk_root="$SDK_DIR" || true
 
 echo "[5/7] Installing Android Platform 33 and Build Tools..."
-"$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK_DIR" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+yes | "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK_DIR" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
 echo "[6/7] Preparing Capacitor Android Project..."
 cd "$PROJECT_DIR"

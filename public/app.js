@@ -239,10 +239,36 @@ function closeNewSiteModal() {
   document.getElementById('site-path').value = '';
 }
 
-// Auto-detect project folder path helper
+// Auto-detect project folder path helper (or open native folder picker if running on mobile App)
 function autoDetectProjectPath() {
-  const defaultPath = '/home/deep/Music/newregal-main/NEWREGAL/app/dist';
-  document.getElementById('site-path').value = defaultPath;
+  if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.FolderPicker) {
+    Capacitor.Plugins.FolderPicker.selectFolder()
+      .then(result => {
+        let uriPath = result.path;
+        try {
+          uriPath = decodeURIComponent(uriPath);
+          
+          // Parse standard path representation from uri
+          if (uriPath.includes('primary:')) {
+            uriPath = '/storage/emulated/0/' + uriPath.split('primary:')[1];
+          } else if (uriPath.includes('tree/')) {
+            const splitParts = uriPath.split('tree/');
+            if (splitParts[1]) {
+              uriPath = splitParts[1];
+            }
+          }
+        } catch(e) {}
+        
+        document.getElementById('site-path').value = uriPath;
+      })
+      .catch(err => {
+        console.error('Failed to pick native folder:', err);
+      });
+  } else {
+    // Standard desktop relative path auto-detect
+    const defaultPath = '/home/deep/Music/newregal-main/NEWREGAL/app/dist';
+    document.getElementById('site-path').value = defaultPath;
+  }
 }
 
 // Handle form submission to create site
