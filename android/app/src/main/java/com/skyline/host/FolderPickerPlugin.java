@@ -14,7 +14,7 @@ import com.getcapacitor.annotation.ActivityCallback;
 @CapacitorPlugin(name = "FolderPicker")
 public class FolderPickerPlugin extends Plugin {
     private LocalWebServer localServer;
-    private CloudflareTunnel cloudflareTunnel;
+    private LocalTunnel localTunnel;
     private String selectedUriString = null;
 
     @PluginMethod
@@ -36,7 +36,6 @@ public class FolderPickerPlugin extends Plugin {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                     selectedUriString = uri.toString();
                     JSObject ret = new JSObject();
                     ret.put("path", uri.toString());
@@ -51,9 +50,7 @@ public class FolderPickerPlugin extends Plugin {
     @PluginMethod
     public void startLocalServer(PluginCall call) {
         String uriStr = call.getString("uri");
-        if (uriStr == null) {
-            uriStr = selectedUriString;
-        }
+        if (uriStr == null) uriStr = selectedUriString;
         Integer portVal = call.getInt("port", 9090);
 
         if (uriStr == null) {
@@ -62,54 +59,47 @@ public class FolderPickerPlugin extends Plugin {
         }
 
         try {
-            if (localServer != null) {
-                localServer.stop();
-            }
-            if (cloudflareTunnel != null) {
-                cloudflareTunnel.stop();
-            }
+            // Stop any existing server/tunnel
+            if (localServer != null) { localServer.stop(); localServer = null; }
+            if (localTunnel != null) { localTunnel.stop(); localTunnel = null; }
 
+            // Start local static file server
             Uri uri = Uri.parse(uriStr);
             localServer = new LocalWebServer(getContext(), uri, portVal);
             localServer.start();
 
-            final String[] resolvedUrl = new String[1];
-            final String[] errorMsg = new String[1];
+            // Start the pure-Java localtunnel.me reverse tunnel
+            final String[] resolvedUrl = {null};
+            final String[] errorMsg = {null};
             final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
 
-            cloudflareTunnel = new CloudflareTunnel(getContext(), portVal, new CloudflareTunnel.TunnelListener() {
+            final int finalPort = portVal;
+            localTunnel = new LocalTunnel(finalPort, new LocalTunnel.TunnelListener() {
                 @Override
                 public void onTunnelStarted(String url) {
                     resolvedUrl[0] = url;
                     latch.countDown();
                 }
-
                 @Override
                 public void onTunnelError(String error) {
                     errorMsg[0] = error;
                     latch.countDown();
                 }
             });
-            cloudflareTunnel.start();
+            localTunnel.start();
 
-            // Wait up to 18 seconds for the Cloudflare tunnel to resolve its public URL
-            boolean completed = latch.await(18, java.util.concurrent.TimeUnit.SECONDS);
+            // Wait up to 20 seconds for tunnel URL
+            boolean completed = latch.await(20, java.util.concurrent.TimeUnit.SECONDS);
 
             if (!completed) {
-                String processLogs = cloudflareTunnel != null ? cloudflareTunnel.getLogs() : "No logs captured.";
-                if (cloudflareTunnel != null) {
-                    cloudflareTunnel.stop();
-                }
-                call.reject("Cloudflare tunnel connection timed out. System Output:\n" + processLogs);
+                if (localTunnel != null) localTunnel.stop();
+                call.reject("Tunnel timed out. Check your internet connection and try again.");
                 return;
             }
 
             if (errorMsg[0] != null) {
-                String processLogs = cloudflareTunnel != null ? cloudflareTunnel.getLogs() : "";
-                if (cloudflareTunnel != null) {
-                    cloudflareTunnel.stop();
-                }
-                call.reject("Cloudflare tunnel failed to start: " + errorMsg[0] + "\nOutput:\n" + processLogs);
+                if (localTunnel != null) localTunnel.stop();
+                call.reject("Tunnel error: " + errorMsg[0]);
                 return;
             }
 
@@ -120,26 +110,20 @@ public class FolderPickerPlugin extends Plugin {
             call.resolve(ret);
 
         } catch (Exception e) {
-            call.reject("Failed to start server: " + e.getMessage());
+            call.reject("Failed to start: " + e.getMessage());
         }
     }
 
     @PluginMethod
     public void stopLocalServer(PluginCall call) {
         try {
-            if (localServer != null) {
-                localServer.stop();
-                localServer = null;
-            }
-            if (cloudflareTunnel != null) {
-                cloudflareTunnel.stop();
-                cloudflareTunnel = null;
-            }
+            if (localServer != null) { localServer.stop(); localServer = null; }
+            if (localTunnel != null) { localTunnel.stop(); localTunnel = null; }
             JSObject ret = new JSObject();
             ret.put("status", "stopped");
             call.resolve(ret);
         } catch (Exception e) {
-            call.reject("Failed to stop server: " + e.getMessage());
+            call.reject("Failed to stop: " + e.getMessage());
         }
     }
 }
