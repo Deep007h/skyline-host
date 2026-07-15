@@ -11,6 +11,7 @@ public class CloudflareTunnel {
     private String tunnelUrl = null;
     private boolean isRunning = false;
     private final TunnelListener listener;
+    private final StringBuilder logBuffer = new StringBuilder();
 
     public interface TunnelListener {
         void onTunnelStarted(String url);
@@ -27,7 +28,6 @@ public class CloudflareTunnel {
         isRunning = true;
         new Thread(() -> {
             try {
-                // Resolve the pre-packaged binary from the native library directory
                 File binaryFile = new File(context.getApplicationInfo().nativeLibraryDir, "libcloudflared.so");
                 if (!binaryFile.exists()) {
                     Log.e("CloudflareTunnel", "Binary not found in native library directory: " + binaryFile.getAbsolutePath());
@@ -38,8 +38,10 @@ public class CloudflareTunnel {
                 }
 
                 Log.d("CloudflareTunnel", "Launching tunnel from: " + binaryFile.getAbsolutePath());
+                synchronized (logBuffer) {
+                    logBuffer.setLength(0);
+                }
 
-                // Launch tunnel command
                 String[] cmd = {binaryFile.getAbsolutePath(), "tunnel", "--url", "http://localhost:" + port};
                 ProcessBuilder pb = new ProcessBuilder(cmd);
                 pb.redirectErrorStream(true);
@@ -49,6 +51,13 @@ public class CloudflareTunnel {
                 String line;
                 while (isRunning && (line = reader.readLine()) != null) {
                     Log.d("CloudflareTunnel", line);
+                    synchronized (logBuffer) {
+                        logBuffer.append(line).append("\n");
+                        if (logBuffer.length() > 10000) {
+                            logBuffer.delete(0, 5000);
+                        }
+                    }
+
                     // Search for trycloudflare URL in logs
                     if (line.contains(".trycloudflare.com")) {
                         String[] words = line.split("\\s+");
@@ -63,6 +72,17 @@ public class CloudflareTunnel {
                         }
                     }
                 }
+
+                // Check if process exited early
+                try {
+                    int exitVal = process.exitValue();
+                    if (listener != null) {
+                        listener.onTunnelError("Process exited immediately with code: " + exitVal);
+                    }
+                } catch (IllegalThreadStateException e) {
+                    // Process is still running, which is fine
+                }
+
             } catch (Exception e) {
                 Log.e("CloudflareTunnel", "Error running tunnel", e);
                 if (listener != null) {
@@ -77,6 +97,12 @@ public class CloudflareTunnel {
         if (process != null) {
             process.destroy();
             process = null;
+        }
+    }
+
+    public String getLogs() {
+        synchronized (logBuffer) {
+            return logBuffer.toString();
         }
     }
 }

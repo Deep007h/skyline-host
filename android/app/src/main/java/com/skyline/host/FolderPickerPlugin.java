@@ -92,23 +92,31 @@ public class FolderPickerPlugin extends Plugin {
             });
             cloudflareTunnel.start();
 
-            // Wait up to 15 seconds for the Cloudflare tunnel to resolve its public URL
-            boolean completed = latch.await(15, java.util.concurrent.TimeUnit.SECONDS);
+            // Wait up to 18 seconds for the Cloudflare tunnel to resolve its public URL
+            boolean completed = latch.await(18, java.util.concurrent.TimeUnit.SECONDS);
 
             if (!completed) {
-                call.reject("Cloudflare tunnel connection timed out.");
+                String processLogs = cloudflareTunnel != null ? cloudflareTunnel.getLogs() : "No logs captured.";
+                if (cloudflareTunnel != null) {
+                    cloudflareTunnel.stop();
+                }
+                call.reject("Cloudflare tunnel connection timed out. System Output:\n" + processLogs);
                 return;
             }
 
             if (errorMsg[0] != null) {
-                call.reject("Cloudflare tunnel failed to start: " + errorMsg[0]);
+                String processLogs = cloudflareTunnel != null ? cloudflareTunnel.getLogs() : "";
+                if (cloudflareTunnel != null) {
+                    cloudflareTunnel.stop();
+                }
+                call.reject("Cloudflare tunnel failed to start: " + errorMsg[0] + "\nOutput:\n" + processLogs);
                 return;
             }
 
             JSObject ret = new JSObject();
             ret.put("status", "running");
             ret.put("port", portVal);
-            ret.put("url", resolvedUrl[0]); // Returns the real trycloudflare.com URL!
+            ret.put("url", resolvedUrl[0]);
             call.resolve(ret);
 
         } catch (Exception e) {
