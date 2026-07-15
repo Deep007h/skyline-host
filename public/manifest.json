@@ -1,0 +1,17 @@
+{
+  "name": "Skyline Host",
+  "short_name": "Skyline",
+  "description": "Cross-platform static site auto-hosting & tunneling dashboard",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#d4af37",
+  "icons": [
+    {
+      "src": "/images/mascot.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

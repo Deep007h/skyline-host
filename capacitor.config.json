@@ -1,0 +1,9 @@
+{
+  "appId": "com.skyline.host",
+  "appName": "Skyline Host",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

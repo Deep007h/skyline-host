@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skyline Host — Dashboard</title>
+  
+  <!-- PWA Setup -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#FAF8F5">
+  <link rel="apple-touch-icon" href="/images/mascot.jpg">
+
+  <!-- Google Fonts (Lora and Plus Jakarta Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Redesigned stylesheet for 1:1 look -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <div class="desktop-layout">
+    
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Top Brand Logo -->
+      <div class="brand">
+        <div class="logo-box">
+          <i data-lucide="cloud-lightning" class="brand-logo-icon"></i>
+        </div>
+        <div class="brand-text">
+          <h2>Skyline Host</h2>
+          <p>Local • Static • Temporary</p>
+        </div>
+      </div>
+
+      <!-- Navigation menu list -->
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active">
+          <i data-lucide="home"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" onclick="openNewSiteModal()">
+          <i data-lucide="folder"></i>
+          <span>Sites</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i data-lucide="git-branch"></i>
+          <span>Tunnels</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i data-lucide="file-text"></i>
+          <span>Logs</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- Bottom Server Status Card (with Cute Cat) -->
+      <div class="server-status-card">
+        <div class="status-info">
+          <span class="status-label">Server Status</span>
+          <div class="status-value">
+            <span class="status-dot-green"></span>
+            <span>Running</span>
+          </div>
+          <span class="status-version" id="sys-version-sidebar">v2.0.15.1</span>
+        </div>
+        <div class="status-cat-frame">
+          <img src="/images/cat.jpg" alt="Mascot Cat" class="cat-img">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Floating Header Bar -->
+      <div class="main-header">
+        
+        <!-- Quick Stats Pill (Top Right) -->
+        <div class="header-stats-pill" id="system-stats">
+          <div class="stat-pill-item">
+            <i data-lucide="cpu" size="14"></i>
+            <span id="sys-os">Linux (x64)</span>
+          </div>
+          <div class="stat-pill-item">
+            <i data-lucide="package" size="14"></i>
+            <span id="sys-node">v2.0.15.1</span>
+          </div>
+          <div class="stat-pill-item">
+            <i data-lucide="database" size="14"></i>
+            <span id="sys-memory">8 MB</span>
+          </div>
+          <div class="stat-pill-item">
+            <span class="status-dot-green"></span>
+            <span id="sys-binary">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Banner -->
+      <div class="welcome-banner">
+        <div class="welcome-text-group">
+          <h1>こんにちは 👋</h1>
+          <p>Host your project locally. Share it globally.</p>
+        </div>
+        <button class="btn-new-site" onclick="openNewSiteModal()">
+          <i data-lucide="plus" size="16"></i>
+          <span>New Site</span>
+        </button>
+      </div>
+
+      <!-- Active Tunnels Section -->
+      <section class="tunnels-section">
+        <div class="tunnels-section-header">
+          <h3>Active Tunnels</h3>
+          <span class="count-badge" id="sites-count">0</span>
+        </div>
+
+        <div class="sites-list" id="sites-list">
+          <!-- Empty State (Shows when no active tunnels exist) -->
+          <div class="empty-state" id="empty-state">
+            <i data-lucide="radar" class="empty-icon"></i>
+            <p>No active tunnels. Click '+ New Site' or drop a folder below to start.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Drop Zone Area (Bottom) -->
+      <div class="drop-zone-wrapper" onclick="openNewSiteModal()">
+        <div class="drop-zone-content">
+          <i data-lucide="upload-cloud" class="upload-icon"></i>
+          <h4>Drop your site folder here</h4>
+          <p>or click to select</p>
+          <span class="subtext">(index.html will be served)</span>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- New Site Configuration Modal -->
+  <div class="modal" id="new-site-modal">
+    <div class="modal-backdrop" onclick="closeNewSiteModal()"></div>
+    <div class="modal-content-form">
+      <div class="modal-form-header">
+        <h3>Host New Site</h3>
+        <button class="btn-modal-close" onclick="closeNewSiteModal()">✕</button>
+      </div>
+      <form id="host-form" class="modal-host-form">
+        <div class="form-group">
+          <label for="site-name">Site Label</label>
+          <input type="text" id="site-name" placeholder="e.g. My Website" required>
+        </div>
+        <div class="form-group">
+          <label for="site-path">Local Folder Path</label>
+          <div class="input-helper-group">
+            <input type="text" id="site-path" placeholder="e.g. /home/deep/Music/newregal-main/NEWREGAL/app/dist" required>
+            <button type="button" class="btn-detect" id="btn-detect-path" title="Auto-detect current build directory">
+              <i data-lucide="compass" size="16"></i>
+            </button>
+          </div>
+          <span class="input-info">Folder must contain index.html or other static files.</span>
+        </div>
+        <button type="submit" class="btn-primary-form" id="submit-btn">
+          <i data-lucide="rocket" size="16"></i>
+          <span>Initialize Tunnel</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Logs Overlay Modal -->
+  <div class="modal" id="logs-modal">
+    <div class="modal-backdrop" onclick="closeLogsModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h3 id="logs-title">Site Logs</h3>
+          <p id="logs-subtitle" class="subtitle">Cloudflare tunnel connector stream</p>
+        </div>
+        <div class="modal-header-actions">
+          <button class="btn-terminal-action" onclick="fetchLogs()" title="Refresh Logs">
+            <i data-lucide="refresh-cw" size="14"></i>
+          </button>
+          <button class="btn-terminal-close" onclick="closeLogsModal()">close</button>
+        </div>
+      </div>
+      <div class="logs-container" id="logs-viewport">
+        <!-- Logs stream -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
