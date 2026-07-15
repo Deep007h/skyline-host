@@ -36,8 +36,9 @@ body {
   font-family: var(--font-body);
   color: var(--text-primary);
   background-color: var(--bg-main);
-  overflow: hidden;
-  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
 }
 
 /* 2-Column Desktop Grid Layout */
@@ -57,6 +58,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   height: 100vh;
+  overflow-y: auto;
   z-index: 10;
 }
 
@@ -720,6 +722,8 @@ body {
   border-radius: 20px;
   width: 90%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   padding: 24px;
   z-index: 10;
   box-shadow: 0 12px 40px rgba(92, 78, 60, 0.15);
@@ -943,8 +947,9 @@ body {
   .desktop-layout {
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
     height: auto;
-    overflow-y: auto;
+    overflow: visible;
     width: 100%;
   }
 
@@ -992,9 +997,10 @@ body {
   }
 
   .main-content {
-    padding: 24px 16px;
+    padding: 24px 16px 100px 16px;
     height: auto;
-    min-height: calc(100vh - 200px);
+    min-height: 60vh;
+    overflow: visible;
     background-size: cover;
     background-position: center center;
   }
@@ -1088,5 +1094,23 @@ body {
   .modal-content-form {
     width: 95%;
     padding: 16px;
+    max-height: 85vh;
+    overflow-y: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .modal {
+    align-items: flex-start;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    overflow-y: auto;
+  }
+
+  .modal-content {
+    height: auto;
+    max-height: 80vh;
+    width: 95%;
+    overflow: hidden;
   }
 }
