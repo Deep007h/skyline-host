@@ -872,3 +872,156 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-hover);
 }
+
+/* Mobile & Android Responsiveness */
+@media (max-width: 768px) {
+  .desktop-layout {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1.5px solid var(--border-color);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .brand {
+    margin-bottom: 12px;
+    justify-content: center;
+  }
+
+  .nav-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .nav-item {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .server-status-card {
+    width: 100%;
+    max-width: 320px;
+    margin: 10px auto 0 auto;
+    height: 90px;
+    padding: 12px;
+  }
+
+  .status-cat-frame {
+    width: 60px;
+    height: 60px;
+    right: 8px;
+    bottom: 0px;
+  }
+
+  .main-content {
+    padding: 24px 16px;
+    height: auto;
+    min-height: calc(100vh - 200px);
+    background-size: cover;
+    background-position: center center;
+  }
+
+  .header-stats-pill {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 12px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    width: 100%;
+  }
+
+  .stat-pill-item {
+    font-size: 10px;
+  }
+
+  .stat-pill-item:not(:last-child)::after {
+    display: none;
+  }
+
+  .welcome-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .welcome-text-group h1 {
+    font-size: 24px;
+  }
+
+  .welcome-text-group p {
+    font-size: 12px;
+  }
+
+  .btn-new-site {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .site-card {
+    padding: 16px;
+  }
+
+  .site-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .site-card-header .actions-group {
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .site-card-body {
+    gap: 10px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .info-row .label {
+    font-size: 10px;
+    width: 100%;
+  }
+
+  .info-row .value {
+    font-size: 11px;
+    width: 100%;
+  }
+
+  .card-actions {
+    width: 100%;
+  }
+
+  .btn-stop-tunnel {
+    width: 100%;
+    text-align: center;
+  }
+
+  .drop-zone-wrapper {
+    padding: 24px 16px;
+  }
+  
+  .modal-content-form {
+    width: 95%;
+    padding: 16px;
+  }
+}
